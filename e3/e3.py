@@ -49,29 +49,32 @@ def t_newline(t):
     r'\n[ ]*'
     global indent_stack
     t.lexer.lineno += 1
-    indent = len(t.value) - 1
-    prev_indents = len(indent_stack)
 
-    if indent_stack[prev_indents - 1] < indent:
+    if t.lexer.lexdata[t.lexer.lexpos] != '\n':
 
-        indent_stack.append(indent)
-        t.type = 'INDENT'
-        t.value = indent
-        return t
+        indent = len(t.value) - 1
+        prev_indents = len(indent_stack)
 
-    elif indent_stack[prev_indents - 1] > indent:
+        if indent_stack[prev_indents - 1] < indent:
 
-        if indent_stack[prev_indents - 2] >= indent:
-            if indent_stack[prev_indents - 2] > indent:
-                t.lexer.lexpos = t.lexpos
-                t.lexer.lineno -= 1
-
-            indent_stack.pop()
-            t.type = 'DEDENT'
-            t.value = indent_stack[prev_indents - 2]
+            indent_stack.append(indent)
+            t.type = 'INDENT'
+            t.value = indent
             return t
-        else:
-            print('Indentation error')
+
+        elif indent_stack[prev_indents - 1] > indent:
+
+            if indent_stack[prev_indents - 2] >= indent:
+                if indent_stack[prev_indents - 2] > indent:
+                    t.lexer.lexpos = t.lexpos
+                    t.lexer.lineno -= 1
+
+                indent_stack.pop()
+                t.type = 'DEDENT'
+                t.value = indent_stack[prev_indents - 2]
+                return t
+            else:
+                print('Indentation error')
 
 
 t_ignore = ' '
@@ -83,13 +86,6 @@ def t_error(t):
 
 # Build the lexer
 lexer = lex.lex()
-
-input_file = open('testInput.txt', 'r')
-lexer.input(input_file.read())
-input_file.close()
-
-for tok in lexer:
-    print(tok)
 
 
 def p_main_program(p):
@@ -164,5 +160,5 @@ def p_error(t):
 
 parser = yacc.yacc()
 input_file = open('testInput.txt', 'r')
-parser.parse(input_file.read())
+parser.parse(input_file.read().rstrip())
 input_file.close()
