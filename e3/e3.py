@@ -64,6 +64,7 @@ def t_newline(t):
         if indent_stack[prev_indents - 2] >= indent:
             if indent_stack[prev_indents - 2] > indent:
                 t.lexer.lexpos = t.lexpos
+                t.lexer.lineno -= 1
 
             indent_stack.pop()
             t.type = 'DEDENT'
@@ -97,11 +98,64 @@ def p_main_program(p):
 
 
 def p_code_section(p):
-    'code_section : CODE COLON INDENT DEDENT'
+    'code_section : CODE COLON INDENT state_list DEDENT'
+
+
+def p_state_list(p):
+    '''
+    state_list : state_info
+               | state_list state_info
+    '''
+
+
+def p_state_info(p):
+    'state_info : ID COLON INDENT symbol_list DEDENT'
+
+
+def p_symbol_list(p):
+    '''
+    symbol_list : symbol_info
+                | symbol_list symbol_info
+    '''
+
+
+def p_symbol_info(p):
+    '''
+    symbol_info : STRING COLON INDENT write_stmt DEDENT
+                | STRING COLON INDENT move_stmt DEDENT
+                | STRING COLON INDENT state_stmt DEDENT
+                | STRING COLON INDENT write_stmt move_stmt DEDENT
+                | STRING COLON INDENT write_stmt state_stmt DEDENT
+                | STRING COLON INDENT move_stmt state_stmt DEDENT
+                | STRING COLON INDENT write_stmt move_stmt state_stmt DEDENT
+    '''
+
+
+def p_write_stmt(p):
+    'write_stmt : WRITE COLON STRING'
+
+
+def p_move_stmt(p):
+    'move_stmt : MOVE COLON ID'
+
+
+def p_state_stmt(p):
+    'state_stmt : STATE COLON ID'
 
 
 def p_tapes_section(p):
-    'tapes_section : TAPES COLON INDENT DEDENT'
+    'tapes_section : TAPES COLON INDENT tape_list DEDENT'
+
+
+def p_tape_list(p):
+    '''
+    tape_list : tape_info
+              | tape_list tape_info
+    '''
+
+
+def p_tape_info(p):
+    'tape_info : NUMBER COLON STRING'
 
 
 def p_error(t):
